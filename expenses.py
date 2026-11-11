@@ -154,18 +154,24 @@ def months_covered(expenses):
 
 def totals_by_category(expenses):
     """Calculate the total amount of expenses by category."""
-    cat = {}
+    total_category = {}
     for expense in expenses:
-        if expense.category not in cat:
-            cat[expense.category] = expense.amount
+        if expense.category not in total_category:
+            total_category[expense.category] = expense.amount
         else:
-            cat[expense.category] += expense.amount
-    return cat
+            total_category[expense.category] += expense.amount
+    return total_category
 
 
-def monthly_averages(months, total_category):
+def monthly_averages(months_cov, total_category):
     """Calculate the average amount of expenses by category."""
-    return months
+    average_per_month = {}
+
+    for category, amount in total_category.items():
+        average_per_month[category] = amount / months_cov
+
+    return average_per_month
+
 
 
 def main():
