@@ -57,7 +57,7 @@ def save_expense(expense):
     with open(FILENAME, "a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
 
-        # A brand new file needs its header line first.
+        # A brand-new file needs its header line first.
         if not file_exists:
             writer.writerow(COLUMNS)
 
@@ -114,7 +114,46 @@ def show_menu():
     print("=== Expense tracker ===")
     print("1. Show history")
     print("2. Add an expense")
-    print("3. Quit")
+    print("3. Statistics")
+    print("4. Quit")
+
+
+def show_stats():
+    """Display the statistics."""
+    expenses = read_expenses()
+
+    if not expenses:
+        print("No expense saved yet, add one first.\n")
+        return
+
+    print("\n--- Statistics ---")
+    global_expense = total_expenses(expenses)
+    months = months_covered(expenses)
+    total_category = totals_by_category(expenses)
+    average_per_month = monthly_averages(months, total_category)
+
+
+def total_expenses(expenses):
+    """Calculate the total expenses saved in the CSV file."""
+    global_expense = 0
+    for expense in expenses:
+        global_expense += expense.amount
+    return global_expense
+
+
+def months_covered(expenses):
+    """Calculate the number of months covered by the expenses."""
+    return expenses
+
+
+def totals_by_category(expenses):
+    """Calculate the total amount of expenses by category."""
+    return
+
+
+def monthly_averages(months, total_category):
+    """Calculate the average amount of expenses by category."""
+    return months
 
 
 def main():
@@ -127,10 +166,12 @@ def main():
         elif choice == "2":
             add_expense()
         elif choice == "3":
+            show_stats()
+        elif choice == "4":
             print("See you soon!")
             break
         else:
-            print("Invalid choice, please enter a number between 1 and 3.\n")
+            print("Invalid choice, please enter a number between 1 and 4.\n")
 
 
 if __name__ == "__main__":
