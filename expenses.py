@@ -143,7 +143,13 @@ def total_expenses(expenses):
 
 def months_covered(expenses):
     """Calculate the number of months covered by the expenses."""
-    return expenses
+    months = set()
+    for expense in expenses:
+        split_date = expense.date.split("/")
+        month_key = f"{split_date[1]}/{split_date[2]}"
+        months.add(month_key)
+    months_cov = len(months)
+    return months_cov
 
 
 def totals_by_category(expenses):
