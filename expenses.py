@@ -111,7 +111,7 @@ def add_expense():
 
 def show_menu():
     """Display the available choices."""
-    print("=== Expense tracker ===")
+    print("\n=== Expense tracker ===")
     print("1. Show history")
     print("2. Add an expense")
     print("3. Statistics")
@@ -131,6 +131,20 @@ def show_stats():
     months = months_covered(expenses)
     total_category = totals_by_category(expenses)
     average_per_month = monthly_averages(months, total_category)
+
+    if months == 1:
+        word = "month"
+    else:
+        word = "months"
+
+    print(f"\nTotal expenses: {global_expense:.2f} EUR over {months} {word}\n")
+    header = f"{'Category':<20}{'Total':>10}{'Monthly avg':>20}"
+    print(header)
+
+
+    for category, amount in total_category.items():
+        line = f"{category:<20}{amount:>10.2f}{average_per_month[category]:>20.2f}"
+        print(line)
 
 
 def total_expenses(expenses):
