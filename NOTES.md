@@ -74,8 +74,9 @@ Le menu avait alors 3 choix ; il en compte 4 depuis l'ajout de « Statistics ».
 | `8083a5a` | `monthly_averages` et renommage de `cat` en `total_category` |
 | `7be88aa` | affichage complet dans `show_stats` |
 | `ee364e8` | mise à jour de `NOTES.md` (fonctionnalité 1) |
+| `308a3b3` | fonctionnalité 2 : menu « Car Purchase Simulator » (4) et « Quit » (5), `average_expenses_monthly`, `month_savings`, `months_to_buy`, `show_month_for_car`, et mise à jour de `NOTES.md` |
 
-- Fonctionnalité 2 développée sur `develop` (menu, trois fonctions de calcul, `show_month_for_car`) : commit à ajouter ici après le push, avec son hash.
+La fonctionnalité 2 a été validée par tous les tests de la section 8 avant d'être commitée en une seule fois, puis poussée sur `develop`.
 
 ## 7. Étape 5 – Fonctionnalité 1 : statistiques par catégorie
 
