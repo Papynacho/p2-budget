@@ -6,10 +6,12 @@ year of expenses, so the statistics are meaningful from the first run.
 
 import csv
 import os
+import math
 from datetime import datetime
 
 FILENAME = "emma_expenses.csv"  # or "personnal_expenses.csv"
 COLUMNS = ["date", "category", "description", "amount"]
+INCOME = 2000
 
 
 class Expense:
@@ -115,7 +117,8 @@ def show_menu():
     print("1. Show history")
     print("2. Add an expense")
     print("3. Statistics")
-    print("4. Quit")
+    print("4. Car Purchase Simulator")
+    print("5. Quit")
 
 
 def show_stats():
@@ -187,6 +190,53 @@ def monthly_averages(months_cov, total_category):
     return average_per_month
 
 
+def average_expenses_monthly(global_expense, months_cov):
+    """Calculate the average monthly amount of expenses """
+    av = global_expense / months_cov
+    return av
+
+
+def month_savings(income, av):
+    """Calculate the monthly savings"""
+    savings = income - av
+    if savings <= 0:
+        return None
+    return savings
+
+
+def months_to_buy(choice_car_price,savings):
+    """Calculate the months to buy an expense."""
+    months_necessary_to_buy = choice_car_price / savings
+    return math.ceil(months_necessary_to_buy)
+
+
+def show_month_for_car():
+    """Display the number of months to buy the car."""
+    expenses = read_expenses()
+    if not expenses:
+        print("No expense saved yet, add one first.\n")
+        return
+
+    choice_car_price = input("Car price in € : ").strip().replace(",", ".")
+    try:
+        amount = float(choice_car_price)
+        if amount <= 0 or not math.isfinite(amount):
+            print("Invalid price, enter a positive number\n")
+            return
+    except ValueError:
+        print("Invalid amount, input only numbers.\n")
+        return
+
+    month = months_covered(expenses)
+    global_expense = total_expenses(expenses)
+    av = average_expenses_monthly(global_expense, month)
+    savings = month_savings(INCOME, av)
+    if savings is None:
+        print("No savings available\n")
+        return
+    m_necessary_to_buy = months_to_buy(amount, savings)
+    print(f"You need : {m_necessary_to_buy} months to buy your dreamed car\n")
+
 
 def main():
     while True:
@@ -200,10 +250,12 @@ def main():
         elif choice == "3":
             show_stats()
         elif choice == "4":
+            show_month_for_car()
+        elif choice == "5":
             print("See you soon!")
             break
         else:
-            print("Invalid choice, please enter a number between 1 and 4.\n")
+            print("Invalid choice, please enter a number between 1 and 5.\n")
 
 
 if __name__ == "__main__":

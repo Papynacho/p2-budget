@@ -73,6 +73,9 @@ Le menu avait alors 3 choix ; il en compte 4 depuis l'ajout de « Statistics ».
 | `3ddde61` | `totals_by_category` |
 | `8083a5a` | `monthly_averages` et renommage de `cat` en `total_category` |
 | `7be88aa` | affichage complet dans `show_stats` |
+| `ee364e8` | mise à jour de `NOTES.md` (fonctionnalité 1) |
+
+- Fonctionnalité 2 développée sur `develop` (menu, trois fonctions de calcul, `show_month_for_car`) : commit à ajouter ici après le push, avec son hash.
 
 ## 7. Étape 5 – Fonctionnalité 1 : statistiques par catégorie
 
@@ -119,7 +122,62 @@ Le menu avait alors 3 choix ; il en compte 4 depuis l'ajout de « Statistics ».
 - **Pas de tri** : les catégories apparaissent dans l'ordre d'arrivée dans le CSV (piste : `sorted(...)`).
 - **Format de date supposé** : `jj/mm/aaaa`. Une date mal formée (`5/3/25`) provoquerait des résultats faux ou une erreur.
 
-**Questions à poser au mentor avant les fonctionnalités 2 et 3**
-1. D'où vient le revenu mensuel pour calculer l'épargne disponible ? Il n'est dans aucun fichier.
-2. Quelle est la formule du prêt immobilier (taux, durée) ?
-3. Comment compter les « mois couverts » (voir limites) ?
+**Questions posées au mentor avant les fonctionnalités 2 et 3**
+1. D'où vient le revenu mensuel pour calculer l'épargne disponible ? → **Réponse reçue** : il manque bien dans les données. Avec le mentor, j'ai fixé `INCOME = 2000` en constante (voir section 8).
+2. Quelle est la formule du prêt immobilier (taux, durée) ? → **Toujours ouverte**, nécessaire pour la fonctionnalité 3.
+3. Comment compter les « mois couverts » (voir limites) ? → **Toujours ouverte** : cela change les moyennes des fonctionnalités 1 et 2.
+
+## 8. Étape 5 – Fonctionnalité 2 : simulation d'achat d'une voiture
+
+**Objectif** (cahier des charges) : à partir de l'historique et du prix saisi, calculer l'épargne mensuelle disponible et afficher le nombre de mois nécessaires pour atteindre ce prix.
+
+**Revenu** : il n'est dans aucun fichier. `INCOME = 2000` est une **constante** en haut du fichier, définie avec le mentor. Elle est passée en argument à `month_savings` : la fonction travaille avec ce qu'elle reçoit (`income`), elle ne va pas chercher la constante elle-même.
+
+**Menu** : « Car Purchase Simulator » en 4 (le mot « Loan » a été remplacé, car la fonctionnalité calcule une durée d'épargne et non un prêt), « Quit » en 5 ; le message d'erreur du menu indique « between 1 and 5 ».
+
+**Organisation du code** : `show_month_for_car()` lit, valide la saisie et **affiche**. Les calculs sont dans trois nouvelles fonctions sans `print`, qui renvoient une valeur. Elles réutilisent `total_expenses` et `months_covered` de la fonctionnalité 1.
+
+| Fonction | Reçoit | Renvoie |
+|---|---|---|
+| `average_expenses_monthly(global_expense, months_cov)` | le total des dépenses et le nombre de mois | la dépense moyenne par mois (nombre) |
+| `month_savings(income, av)` | le revenu et la dépense moyenne | l'épargne mensuelle, ou `None` si elle est ≤ 0 |
+| `months_to_buy(choice_car_price, savings)` | le prix et l'épargne | le nombre de mois entiers (`math.ceil`) |
+
+Déroulé de `show_month_for_car()` :
+1. Lit les dépenses ; si la liste est vide, message et `return` (avant même de demander le prix).
+2. Demande le prix (la virgule est remplacée par un point, comme dans `add_expense`), le convertit avec `float()` et refuse un texte, un prix nul ou négatif, `nan` et `inf`.
+3. Calcule la moyenne mensuelle, puis l'épargne.
+4. Si l'épargne est `None` : message « No savings available » et `return`. Sinon calcule le nombre de mois et l'affiche.
+
+**Formules** : épargne mensuelle = `INCOME` − (total des dépenses ÷ nombre de mois) ; nombre de mois = prix ÷ épargne, arrondi au mois supérieur.
+
+**Choix de conception**
+- **`None` quand l'épargne est ≤ 0** : évite la division par zéro (épargne nulle) et un nombre de mois négatif (épargne négative). Le test est dans `show_month_for_car`, pas dans le calcul, pour que les fonctions de calcul ne fassent aucun `print`.
+- **`math.ceil`** : 18,02 mois donnent 19, car 18 mois ne suffisent pas à atteindre le prix.
+- **Validation du prix** : `float()` dans un `try/except`, puis `amount <= 0 or not math.isfinite(amount)`. C'est la piste notée à la section 5 pour `nan` et `inf`.
+- **Garde-fou « historique vide » avant la saisie** : on ne demande pas un prix pour dire ensuite qu'il n'y a pas de données, et on évite une division par zéro dans la moyenne.
+
+**Vérifications faites** (CSV d'Emma, `INCOME = 2000`)
+
+| Cas | Résultat observé |
+|---|---|
+| Prix 9000 | « You need : 19 months » |
+| Calcul indépendant | 18 006,35 ÷ 12 = 1 500,53 de dépenses par mois ; épargne 499,47 ; 9 000 ÷ 499,47 = 18,02, donc 19 |
+| `INCOME = 1000` (temporaire) | « No savings available », retour au menu, pas de plantage |
+| Prix `0` et `-5` | « Invalid price, enter a positive number » |
+| Prix `nan` | « Invalid price, enter a positive number » |
+| Prix `abc` | « Invalid amount, input only numbers. » |
+| Options 1 et 3 après modification | inchangées (18006.35 EUR, 12 mois, mêmes moyennes) |
+
+**Piège rencontré** : une première valeur attendue (15 mois) avait été calculée à partir de statistiques faussées par une dépense de test de 150 € ajoutée en novembre 2026 (13 mois, 18 156,35 €). Sur le CSV d'origine, le bon résultat est 19. Conclusion : toujours recalculer la valeur de référence sur des données non modifiées.
+
+**Limites constatées**
+- **Revenu fixé dans le code** : il n'est ni saisi ni lu dans un fichier, et il est identique pour `emma_expenses.csv` et `personnal_expenses.csv`.
+- **L'épargne dépend des « mois couverts »** : la moyenne est calculée sur les mois qui ont au moins une dépense, comme pour les statistiques (même question ouverte pour le mentor). Elle inclut le logement.
+- **Calcul simplifié** : pas d'intérêts, d'inflation, d'apport ni de revente d'un véhicule ; la dépense moyenne passée est supposée identique dans le futur.
+- **Singulier** : l'affichage dit « 1 months » si le résultat vaut 1.
+- **Pas de plafond sur le prix** : un prix énorme donne un nombre de mois énorme, affiché tel quel.
+
+**Questions encore ouvertes pour la fonctionnalité 3**
+1. Formule du prêt immobilier (taux, durée) ?
+2. Définition des « mois couverts » (mois distincts, ou durée entre la première et la dernière dépense) ?
