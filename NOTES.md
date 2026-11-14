@@ -11,6 +11,7 @@ Support pour la discussion avec le mentor. Tout ce qui est écrit ici a été ob
 | `emma_expenses.csv` | Données de départ : 213 dépenses sur l'année 2025 |
 | `personnal_expenses.csv` | Fichier vide, ne contient que la ligne d'en-tête |
 | `.gitignore` | Exclut notamment `.venv/`, `__pycache__/` et `.idea/` |
+| `requirements.txt` | Dépendances Python du projet (`numpy-financial`). À installer dans le `.venv` avec `pip install -r requirements.txt` |
 
 **Point d'entrée réel** : `python expenses.py`, lancé depuis le dossier `p2-budget`.
 
@@ -35,7 +36,7 @@ Support pour la discussion avec le mentor. Tout ce qui est écrit ici a été ob
 
 ## 4. Comportements testés (sur la version fournie)
 
-Le menu avait alors 3 choix ; il en compte 4 depuis l'ajout de « Statistics ». Tests faits depuis un dossier **hors du dépôt**, avec `python C:\dev\p2-budget\expenses.py`, pour ne jamais modifier les données d'origine.
+Le menu avait alors 3 choix ; il en compte 6 aujourd'hui (1 historique, 2 ajout, 3 statistiques, 4 simulation voiture, 5 simulation prêt immobilier, 6 quitter). Tests faits depuis un dossier **hors du dépôt**, avec `python C:\dev\p2-budget\expenses.py`, pour ne jamais modifier les données d'origine.
 
 | Cas | Résultat observé |
 |---|---|
@@ -75,8 +76,19 @@ Le menu avait alors 3 choix ; il en compte 4 depuis l'ajout de « Statistics ».
 | `7be88aa` | affichage complet dans `show_stats` |
 | `ee364e8` | mise à jour de `NOTES.md` (fonctionnalité 1) |
 | `308a3b3` | fonctionnalité 2 : menu « Car Purchase Simulator » (4) et « Quit » (5), `average_expenses_monthly`, `month_savings`, `months_to_buy`, `show_month_for_car`, et mise à jour de `NOTES.md` |
+| `f307cc1` | fonctionnalité 3 (début) : constantes `ANNUAL_RATE`, `LOAN_YEARS`, `MAX_DEBT_RATIO`, menu « Mortgage Simulator » (5) et « Quit » (6), `monthly_max_capacity`, affichage provisoire ; `requirements.txt` encore vide |
+| `e0cf80b` | ajout de `numpy-financial` à `requirements.txt` |
+| `ec3c4b6` | `loan_capacity` et affichage du tableau des montants empruntables (fonctionnalité 3 terminée) |
 
-La fonctionnalité 2 a été validée par tous les tests de la section 8 avant d'être commitée en une seule fois, puis poussée sur `develop`.
+Historique complet : `git log --oneline` (il contient aussi les commits du starter et d'éventuels commits intermédiaires non listés ici).
+
+La fonctionnalité 2 a été validée par tous les tests de la section 8 avant d'être commitée en une seule fois, puis poussée sur `develop`. La fonctionnalité 3 a été commitée en trois étapes (calcul de la capacité, dépendance, calcul du capital et affichage), toutes testées (section 9) avant le push.
+
+**Enseignements Git de la fonctionnalité 3**
+- `git commit -am` prend **tous les fichiers suivis modifiés**, pas seulement celui dont parle le message. Un premier commit « Add requirements.txt » embarquait aussi du code inachevé de `expenses.py` ; il a été annulé avec `git reset --soft HEAD~1` (avant tout push), puis refait avec le seul `requirements.txt` (`e0cf80b`).
+- `git commit --amend` n'est utilisable que **tant que rien n'est poussé** : il a corrigé une faute de frappe dans le message de `f307cc1` avant le push.
+- Le message de `ec3c4b6` contient une faute de frappe (« fucntion »). Il a été poussé : je ne l'ai pas corrigé, car cela obligerait à réécrire un commit publié (`--amend` puis `push --force-with-lease`) alors que le mentor a accès au dépôt.
+- `git --no-pager diff` avant chaque commit a permis de repérer que `FILENAME` avait été modifié pour un test (`emma_expense.csv`, sans le « s ») et pas remis en place. Corrigé avant le commit.
 
 ## 7. Étape 5 – Fonctionnalité 1 : statistiques par catégorie
 
@@ -125,8 +137,8 @@ La fonctionnalité 2 a été validée par tous les tests de la section 8 avant d
 
 **Questions posées au mentor avant les fonctionnalités 2 et 3**
 1. D'où vient le revenu mensuel pour calculer l'épargne disponible ? → **Réponse reçue** : il manque bien dans les données. Avec le mentor, j'ai fixé `INCOME = 2000` en constante (voir section 8).
-2. Quelle est la formule du prêt immobilier (taux, durée) ? → **Toujours ouverte**, nécessaire pour la fonctionnalité 3.
-3. Comment compter les « mois couverts » (voir limites) ? → **Toujours ouverte** : cela change les moyennes des fonctionnalités 1 et 2.
+2. Quelle est la formule du prêt immobilier (taux, durée) ? → **Traitée** : formule d'annuité constante avec un taux annuel de 5 % et des durées de 10, 15 et 20 ans, en constantes (voir section 9).
+3. Comment compter les « mois couverts » (voir limites) ? → **Décision provisoire** : on garde les mois distincts qui contiennent au moins une dépense (12 mois pour le CSV d'Emma, ce qui coïncide avec la durée réelle). **À confirmer avec le mentor** : cela change les moyennes des fonctionnalités 1, 2 et 3.
 
 ## 8. Étape 5 – Fonctionnalité 2 : simulation d'achat d'une voiture
 
@@ -179,6 +191,83 @@ Déroulé de `show_month_for_car()` :
 - **Singulier** : l'affichage dit « 1 months » si le résultat vaut 1.
 - **Pas de plafond sur le prix** : un prix énorme donne un nombre de mois énorme, affiché tel quel.
 
-**Questions encore ouvertes pour la fonctionnalité 3**
+**Questions encore ouvertes à la fin de la fonctionnalité 2** (traitées dans la section 9)
 1. Formule du prêt immobilier (taux, durée) ?
 2. Définition des « mois couverts » (mois distincts, ou durée entre la première et la dernière dépense) ?
+
+## 9. Étape 5 – Fonctionnalité 3 : simulation de prêt immobilier
+
+**Objectif** (cahier des charges) : à partir de ma dépense « logement » et de mon épargne mensuelle disponible, calculer le montant empruntable avec la formule fournie, dans la limite d'un taux d'endettement de 35 %. L'énoncé ne dit rien du format d'affichage : le tableau ci-dessous est un choix personnel.
+
+**Menu** : « Mortgage Simulator » en 5, « Quit » en 6 ; le message d'erreur du menu indique « between 1 and 6 ».
+
+**Constantes** (en haut du fichier) : `ANNUAL_RATE = 0.05`, `LOAN_YEARS = (10, 15, 20)` (un tuple : valeurs fixes), `MAX_DEBT_RATIO = 0.35`, en plus de `INCOME = 2000`.
+
+**Interprétation de la capacité de remboursement mensuelle**
+- Le loyer actuel disparaît avec l'achat : la dépense moyenne mensuelle « housing » (780 € pour Emma) devient de la capacité de remboursement, **en plus** de l'épargne mensuelle disponible.
+- Mensualité maximale = min( housing mensuel + épargne disponible ; `INCOME` × `MAX_DEBT_RATIO` ).
+- Si l'épargne vaut `None` (revenu insuffisant, voir fonctionnalité 2), on la remplace par 0 : il reste alors le loyer, plafonné à 35 % du revenu.
+- Avec le CSV d'Emma : 780,00 + 499,47 = 1 279,47, plafonné à 2 000 × 0,35 = **700 €**.
+
+**Formule du capital emprunté** (annuité constante) : `capital = mensualité × (1 − (1 + t)^(−n)) / t`, avec `t` = taux annuel ÷ 12 et `n` = durée en années × 12.
+Implémentation avec la bibliothèque **`numpy-financial`** : `-npf.pv(annual_rate / 12, years * 12, max_capacity)`. `pv` renvoie une valeur négative (la mensualité est un flux sortant), le signe `-` devant la remet positive.
+
+**Dépendance**
+- Installation dans le `.venv` : `pip install numpy-financial` (nom d'installation avec un tiret) ; import dans le code : `import numpy_financial as npf` (nom avec un tiret bas).
+- Version installée : 1.1.0 (Python 3.14, numpy 2.5.4).
+- `.venv` est dans `.gitignore` : sans `requirements.txt`, une autre personne ne saurait pas quoi installer. Le fichier contient `numpy-financial` ; installation : `pip install -r requirements.txt`.
+
+**Organisation du code** : trois fonctions, la première réutilise les fonctions des fonctionnalités 1 et 2.
+
+| Fonction | Reçoit | Renvoie / fait |
+|---|---|---|
+| `monthly_max_capacity(expenses)` | la liste des dépenses | la mensualité maximale (nombre) ; réutilise `total_expenses`, `months_covered`, `average_expenses_monthly`, `totals_by_category`, `monthly_averages`, `month_savings` |
+| `loan_capacity(max_capacity, years, annual_rate)` | la mensualité, la durée en années, le taux annuel | le capital empruntable (nombre), sans `print` |
+| `show_loan_available()` | rien | lit les dépenses, garde-fou « historique vide », affiche la mensualité puis une ligne par durée de `LOAN_YEARS` |
+
+**Choix de conception**
+- **`loan_capacity` est une fonction pure** : elle ne lit ni fichier ni constante, tout lui est passé en paramètre. On la teste seule (700 €, 5 %, 10 ans). Les noms des paramètres sont en minuscules (`annual_rate`) : la constante `ANNUAL_RATE` n'est écrite qu'à l'appel, dans `show_loan_available`.
+- **La mensualité est calculée une fois, avant la boucle** : elle ne change pas d'une durée à l'autre. Seul le capital change, donc l'appel à `loan_capacity` est dans la boucle.
+- **`INCOME` et `MAX_DEBT_RATIO` sont lus directement** dans `monthly_max_capacity` (le principe de la constante `INCOME` a été validé avec le mentor pour la fonctionnalité 2) ; en revanche le taux et la durée sont passés en paramètres.
+- **Format de l'affichage** : `{valeur:>10,.0f}` : alignement à droite, 10 caractères, séparateur de milliers (virgule), aucune décimale.
+
+Exemple d'affichage avec le CSV d'Emma :
+
+```
+--- Mortgage Simulator ---
+
+Monthly payment: 700 Euros
+
+Duration    Amount
+10 years    65,997 Euros
+15 years    88,519 Euros
+20 years   106,068 Euros
+```
+
+**Vérifications faites**
+
+| Cas | Résultat observé |
+|---|---|
+| Mensualité 700 €, 5 %, 10 / 15 / 20 ans, valeurs de référence calculées avant de coder avec la formule | 65 996,95 / 88 518,67 / 106 067,72 € |
+| Même cas dans le programme (CSV d'Emma, `INCOME = 2000`) | 65 997 / 88 519 / 106 068 € (65996.945…, 88518.669…, 106067.719… avant arrondi) |
+| `INCOME = 1000` (temporaire) | mensualité 350 € (le loyer 780 € est plafonné à 35 % de 1 000) ; 32 998 / 44 259 / 53 034 € |
+| Historique vide (`FILENAME` pointant vers un fichier inexistant, temporaire) | « No expense saved yet, add one first. », pas de plantage |
+
+**Pièges rencontrés**
+- **Ordre des arguments de `npf.pv`** : la signature est `pv(rate, nper, pmt)`. En passant les valeurs dans le mauvais ordre, le programme tournait sans erreur mais affichait 507 € : la mensualité était lue comme une valeur finale. Corrigé en vérifiant chaque argument (taux **mensuel**, nombre de **mois**, mensualité).
+- **Tuple multiplié** : `LOAN_YEARS * 12` ne multiplie pas les nombres, il **répète le tuple** 12 fois (36 éléments), sans message d'erreur. Il faut travailler sur une seule durée à la fois, avec la boucle.
+- **Paramètre qui a le même nom que la constante** : écrire `ANNUAL_RATE` comme nom de paramètre masque la constante et enfreint la convention (majuscules réservées aux constantes). Corrigé en `annual_rate`.
+- **Un test laissé dans le code** : voir la section 6 (`FILENAME` modifié pour le test de l'historique vide).
+
+**Limites constatées**
+- **Taux, durées, revenu et plafond sont fixés dans le code** : ni saisis ni lus dans un fichier. Un taux nul n'a pas été testé.
+- **Calcul simplifié** : ni frais de notaire, ni assurance, ni apport, ni durée de recherche du bien ; la même mensualité maximale est supposée pour les trois durées.
+- **Le loyer disparaît entièrement** : on suppose que la dépense « housing » devient capacité de remboursement. C'est une interprétation de l'énoncé, à confirmer avec le mentor.
+- **Dépend des « mois couverts »** : la mensualité utilise les moyennes mensuelles (voir section 7, question 3).
+- **Épargne négative traitée comme 0** : cas du `INCOME = 1000` ; l'application ne le signale pas à l'utilisateur.
+- **Présentation du tableau** : montants arrondis à l'euro, durée sur 2 caractères (suffisant pour 10, 15, 20) ; une durée à 3 chiffres décalerait la colonne.
+
+**Questions à poser au mentor**
+1. L'interprétation « loyer actuel + épargne disponible, plafonné à 35 % du revenu » correspond-elle à ce qui est attendu ?
+2. Définition des « mois couverts » : on garde les mois distincts avec au moins une dépense ?
+3. Le format d'affichage (une ligne par durée, avec la mensualité en tête) est-il acceptable ?
