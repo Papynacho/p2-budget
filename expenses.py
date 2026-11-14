@@ -12,6 +12,9 @@ from datetime import datetime
 FILENAME = "emma_expenses.csv"  # or "personnal_expenses.csv"
 COLUMNS = ["date", "category", "description", "amount"]
 INCOME = 2000
+ANNUAL_RATE = 0.05
+LOAN_YEARS = (10, 15, 20)
+MAX_DEBT_RATIO = 0.35
 
 
 class Expense:
@@ -118,7 +121,8 @@ def show_menu():
     print("2. Add an expense")
     print("3. Statistics")
     print("4. Car Purchase Simulator")
-    print("5. Quit")
+    print("5. Mortgage Simulator")
+    print("6. Quit")
 
 
 def show_stats():
@@ -238,6 +242,33 @@ def show_month_for_car():
     print(f"You need : {m_necessary_to_buy} months to buy your dreamed car\n")
 
 
+def monthly_max_capacity(expenses):
+    """Calculate the maximum payment capacity."""
+    global_expense = total_expenses(expenses)
+    month = months_covered(expenses)
+    av = average_expenses_monthly(global_expense, month)
+    total_cat = totals_by_category(expenses)
+    month_cat = monthly_averages(month, total_cat)
+    housing = month_cat.get("housing", 0)
+    savings = month_savings(INCOME, av)
+    if savings is None:
+        savings = 0
+    total_available_for_loan = housing + savings
+    ceiling = INCOME * MAX_DEBT_RATIO
+    max_capacity = min(total_available_for_loan, ceiling)
+    return max_capacity
+
+
+def show_loan_available():
+    """Display the maximum loan available."""
+    expenses = read_expenses()
+    if not expenses:
+        print("No expense saved yet, add one first.\n")
+        return
+    max_capacity = monthly_max_capacity(expenses)
+    print(max_capacity)
+
+
 def main():
     while True:
         show_menu()
@@ -252,10 +283,12 @@ def main():
         elif choice == "4":
             show_month_for_car()
         elif choice == "5":
+            show_loan_available()
+        elif choice == "6":
             print("See you soon!")
             break
         else:
-            print("Invalid choice, please enter a number between 1 and 5.\n")
+            print("Invalid choice, please enter a number between 1 and 6.\n")
 
 
 if __name__ == "__main__":
