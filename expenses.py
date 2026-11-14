@@ -7,6 +7,7 @@ year of expenses, so the statistics are meaningful from the first run.
 import csv
 import os
 import math
+import numpy_financial as npf
 from datetime import datetime
 
 FILENAME = "emma_expenses.csv"  # or "personnal_expenses.csv"
@@ -259,6 +260,12 @@ def monthly_max_capacity(expenses):
     return max_capacity
 
 
+def loan_capacity(max_capacity, years, annual_rate):
+    """Calculate the maximum loan capacity."""
+    loan_amount = -npf.pv(annual_rate/12, years*12, max_capacity)
+    return loan_amount
+
+
 def show_loan_available():
     """Display the maximum loan available."""
     expenses = read_expenses()
@@ -266,7 +273,14 @@ def show_loan_available():
         print("No expense saved yet, add one first.\n")
         return
     max_capacity = monthly_max_capacity(expenses)
-    print(max_capacity)
+
+    print("\n--- Mortgage Simulator ---\n")
+    print(f"Monthly payment: {max_capacity:.0f} Euros\n")
+    header = f"{'Duration':<2}{'Amount':>10}"
+    print(header)
+    for duration in LOAN_YEARS:
+        loan_amount = loan_capacity(max_capacity, duration, ANNUAL_RATE)
+        print(f"{duration:<2} years{loan_amount:>10,.0f} Euros")
 
 
 def main():
