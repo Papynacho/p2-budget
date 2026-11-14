@@ -148,8 +148,6 @@ def show_stats():
     print(f"\nTotal expenses: {global_expense:.2f} EUR over {months} {word}\n")
     header = f"{'Category':<20}{'Total':>10}{'Monthly avg':>20}"
     print(header)
-
-
     for category, amount in total_category.items():
         line = f"{category:<20}{amount:>10.2f}{average_per_month[category]:>20.2f}"
         print(line)
@@ -196,20 +194,20 @@ def monthly_averages(months_cov, total_category):
 
 
 def average_expenses_monthly(global_expense, months_cov):
-    """Calculate the average monthly amount of expenses """
+    """Calculate the average monthly amount of expenses."""
     av = global_expense / months_cov
     return av
 
 
 def month_savings(income, av):
-    """Calculate the monthly savings"""
+    """Calculate the monthly savings."""
     savings = income - av
     if savings <= 0:
         return None
     return savings
 
 
-def months_to_buy(choice_car_price,savings):
+def months_to_buy(choice_car_price, savings):
     """Calculate the months to buy an expense."""
     months_necessary_to_buy = choice_car_price / savings
     return math.ceil(months_necessary_to_buy)
@@ -240,7 +238,11 @@ def show_month_for_car():
         print("No savings available\n")
         return
     m_necessary_to_buy = months_to_buy(amount, savings)
-    print(f"You need : {m_necessary_to_buy} months to buy your dreamed car\n")
+    if m_necessary_to_buy == 1:
+        word = "month"
+    else:
+        word = "months"
+    print(f"You need : {m_necessary_to_buy} {word} to buy your dreamed car\n")
 
 
 def monthly_max_capacity(expenses):
